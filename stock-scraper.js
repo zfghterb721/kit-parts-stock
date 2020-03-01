@@ -14,25 +14,42 @@ async function getTaydaStock(itemName) {
 }
 
 async function getPololuStock(productNumber) {
-    try {
-      const webpage = await axios.get(
-        `https://www.pololu.com/product/${productNumber}`
-      );
-      return parseInt(webpage.data.match(/<td class="td_right"><span class="message_positive">([0-9]+)<\/span> in stock<\/td>/)[1]);
-    } catch (e) {
-      return null;
-    }
+  try {
+    const webpage = await axios.get(
+      `https://www.pololu.com/product/${productNumber}`
+    );
+    return parseInt(
+      webpage.data.match(
+        /<td class="td_right"><span class="message_positive">([0-9]+)<\/span> in stock<\/td>/
+      )[1]
+    );
+  } catch (e) {
+    return null;
   }
+}
 
-  async function getSparkfunStock(productNumber) {
-    try {
-      const webpage = await axios.get(
-        `https://www.sparkfun.com/products/${productNumber}.json`
-      );
-      return parseInt(webpage.data.quantity);
-    } catch (e) {
-      return null;
-    }
+async function getSparkfunStock(productNumber) {
+  try {
+    const webpage = await axios.get(
+      `https://www.sparkfun.com/products/${productNumber}.json`
+    );
+    return parseInt(webpage.data.quantity);
+  } catch (e) {
+    return null;
   }
+}
 
-module.exports = {getTaydaStock,getSparkfunStock,getPololuStock}
+async function getStock(vendor, productId) {
+  switch (vendor) {
+    case "tayda":
+      return getTaydaStock(productId);
+    case "sparkfun":
+      return getSparkfunStock(productId);
+    case "pololu":
+      return getPololuStock(productId);
+    default:
+      return null;
+  }
+}
+
+module.exports = { getTaydaStock, getSparkfunStock, getPololuStock, getStock };

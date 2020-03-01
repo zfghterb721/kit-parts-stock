@@ -46,8 +46,15 @@ app.get("/getAllRecords", (request, response) => {
   });
 });
 
-app.get("/getStock/:vendor/:id", (request, response) => {
-  
+app.get("/getStock/:vendor/:id", async (req, res) => {
+  const stock = await scraper.getStock(req.params.vendor,req.params.id)
+  res.send(stock?{vendor:req.params.vendor,id:req.params.id,stock:stock}:{error:"Unknown ID/Vendor"});
+});
+
+app.get("/addMonitor/:vendor/:id", async (req, res) => {
+  const stock = await scraper.getStock(req.params.vendor,req.params.id)
+  if(stock)
+  res.send(stock?{vendor:req.params.vendor,id:req.params.id,stock:stock}:{error:"Unknown ID/Vendor"});
 });
 
 // endpoint to add a dream to the database
