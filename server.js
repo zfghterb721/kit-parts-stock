@@ -65,6 +65,11 @@ app.get("/getStock/:vendor/:partNo", async (req, res) => {
   res.send(stock?{vendor:req.params.vendor,partNo:req.params.partNo,stock:stock}:{error:"Unknown ID/Vendor"});
 });
 
+app.post("/getStock", async (req, res) => {
+  const stock = await scraper.getStock(req.body.vendor,req.body.partNo)
+  res.send(stock?{vendor:req.body.vendor,partNo:req.body.partNo,stock:stock}:{error:"Unknown ID/Vendor"});
+});
+
 app.post("/addMonitor", async (req, res) => {
   const stock = await scraper.getStock(req.body.vendor,req.body.partNo)
   if(stock){

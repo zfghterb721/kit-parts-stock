@@ -39,6 +39,28 @@ async function getSparkfunStock(productNumber) {
   }
 }
 
+async function getAlliedStock(productNumber) {
+  try {
+    const webpage = await axios.get(
+      `https://www.alliedelec.com/product/${productNumber}`
+    );
+    return parseInt(webpage.data.match(/<p><b>([0-9\,]+)/)[1].replace(",", ""));
+  } catch (e) {
+    return null;
+  }
+}
+
+async function getNewarkStock(productNumber) {
+  try {
+    const webpage = await axios.get(`https://www.newark.com/${productNumber}`);
+    return parseInt(
+      webpage.data.match(/    ([0-9\,]+) In stock/)[1].replace(",", "")
+    );
+  } catch (e) {
+    return null;
+  }
+}
+
 async function getStock(vendor, productId) {
   switch (vendor) {
     case "tayda":
@@ -47,9 +69,17 @@ async function getStock(vendor, productId) {
       return getSparkfunStock(productId);
     case "pololu":
       return getPololuStock(productId);
+    case "allied":
+      return getAlliedStock(productId);
+    case "newark":
+      return getNewarkStock(productId);
     default:
       return null;
   }
 }
 
 module.exports = { getTaydaStock, getSparkfunStock, getPololuStock, getStock };
+
+getNewarkStock(
+  "raspberry-pi/rpi4-modbp-2gb/raspberry-pi-4-model-b-2gb-rohs/dp/02AH3162"
+).then(e => console.log(e));
