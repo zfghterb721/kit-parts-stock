@@ -65,17 +65,17 @@ app.get("/getStock/:vendor/:partNo", async (req, res) => {
   res.send(stock?{vendor:req.params.vendor,partNo:req.params.partNo,stock:stock}:{error:"Unknown ID/Vendor"});
 });
 
-app.get("/addMonitor/:vendor/:partNo", async (req, res) => {
-  const stock = await scraper.getStock(req.params.vendor,req.params.partNo)
+app.post("/addMonitor", async (req, res) => {
+  const stock = await scraper.getStock(req.body.vendor,req.body.partNo)
   if(stock){
     console.log(`add to dreams ${req.body}`);
     if (!process.env.DISALLOW_WRITE) {
-    const cleansedDream = [req.params.vendor,req.params.partNo]
+    const cleansedDream = [req.body.vendor,req.body.partNo]
       db.run(`INSERT INTO Monitor (vendor, partNo) VALUES (?,?)`, cleansedDream, error => {
         if (error) {
           res.send({error:error});
         } else {
-          res.send(stock?{vendor:req.params.vendor,partNo:req.params.partNo,stock:stock}:{error:"Unknown ID/Vendor"});
+          res.send(stock?{vendor:req.body.vendor,partNo:req.body.partNo,stock:stock}:{error:"Unknown ID/Vendor"});
         }
       });
     }
