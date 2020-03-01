@@ -17,7 +17,7 @@ app.use(bodyParser.json());
 app.use(express.static("public"));
 
 // init sqlite db
-const dbFile = "./.data/stockBase.db";
+const dbFile = "./.data/stockBase2.db";
 const exists = fs.existsSync(dbFile);
 const sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database(dbFile);
@@ -27,6 +27,9 @@ db.serialize(() => {
   if (!exists) {
     db.run(
       "CREATE TABLE Stock (id INTEGER PRIMARY KEY AUTOINCREMENT, vendor TEXT, partNo TEXT, stock INTEGER)"
+    );
+    db.run(
+      "CREATE TABLE Monitor (id INTEGER PRIMARY KEY AUTOINCREMENT, vendor TEXT, partNo TEXT)"
     );
     console.log("Stock table created");
   } else {
@@ -41,32 +44,42 @@ app.get("/", (request, response) => {
 
 // endpoint to get all the dreams in the database
 app.get("/getAllRecords", (request, response) => {
-  db.all("SELECT * from Stock", (err, rows) => {
+  db.all("SELECT * from Monitor", (err, rows) => {
     response.send(JSON.stringify(rows));
   });
 });
 
-app.get("/getStock/:vendor/:id", async (req, res) => {
-  const stock = await scraper.getStock(req.params.vendor,req.params.id)
-  res.send(stock?{vendor:req.params.vendor,id:req.params.id,stock:stock}:{error:"Unknown ID/Vendor"});
+app.get("/getAllStock", (req, res) => {
+  db.all("SELECT * from Monitor", async (err, rows) => {
+    var data = []
+    for(const row of rows){
+      const stock = await scraper.getStock(row.vendor,row.partNo)
+      data.push({vendor:row.vendor,partNo:row.partNo,stock:stock});
+    }
+    res.send(data);
+  });
 });
 
-app.get("/addMonitor/:vendor/:id", async (req, res) => {
-  const stock = await scraper.getStock(req.params.vendor,req.params.id)
+app.get("/getStock/:vendor/:partNo", async (req, res) => {
+  const stock = await scraper.getStock(req.params.vendor,req.params.partNo)
+  res.send(stock?{vendor:req.params.vendor,partNo:req.params.partNo,stock:stock}:{error:"Unknown ID/Vendor"});
+});
+
+app.get("/addMonitor/:vendor/:partNo", async (req, res) => {
+  const stock = await scraper.getStock(req.params.vendor,req.params.partNo)
   if(stock){
     console.log(`add to dreams ${req.body}`);
-      if (!process.env.DISALLOW_WRITE) {
-    const cleansedDream = {vendor:req.params.vendor,productId:req.params.id}
-    db.run(`INSERT INTO Monitor (dream) VALUES (?)`, cleansedDream, error => {
-      if (error) {
-        res.send({ message: "error!" });
-      } else {
-        res.send({ message: "success" });
-      }
-    });
+    if (!process.env.DISALLOW_WRITE) {
+    const cleansedDream = [req.params.vendor,req.params.partNo]
+      db.run(`INSERT INTO Monitor (vendor, partNo) VALUES (?,?)`, cleansedDream, error => {
+        if (error) {
+          res.send({error:error});
+        } else {
+          res.send(stock?{vendor:req.params.vendor,partNo:req.params.partNo,stock:stock}:{error:"Unknown ID/Vendor"});
+        }
+      });
+    }
   }
-  }
-  res.send(stock?{vendor:req.params.vendor,id:req.params.id,stock:stock}:{error:"Unknown ID/Vendor"});
 });
 
 // endpoint to add a dream to the database
