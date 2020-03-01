@@ -66,7 +66,8 @@ app.get("/getStock/:vendor/:partNo", async (req, res) => {
 });
 
 app.post("/getStock", async (req, res) => {
-  const stock = await scraper.getStock(req.body.vendor,req.body.partNo)
+  console.log(req.body.vendor);
+  const stock = await scraper.getStock(req.body.vendor,req.body.partNo);
   res.send(stock?{vendor:req.body.vendor,partNo:req.body.partNo,stock:stock}:{error:"Unknown ID/Vendor"});
 });
 
