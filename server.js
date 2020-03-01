@@ -53,7 +53,19 @@ app.get("/getStock/:vendor/:id", async (req, res) => {
 
 app.get("/addMonitor/:vendor/:id", async (req, res) => {
   const stock = await scraper.getStock(req.params.vendor,req.params.id)
-  if(stock)
+  if(stock){
+    console.log(`add to dreams ${req.body}`);
+      if (!process.env.DISALLOW_WRITE) {
+    const cleansedDream = {vendor:req.params.vendor,productId:req.params.id}
+    db.run(`INSERT INTO Monitor (dream) VALUES (?)`, cleansedDream, error => {
+      if (error) {
+        res.send({ message: "error!" });
+      } else {
+        res.send({ message: "success" });
+      }
+    });
+  }
+  }
   res.send(stock?{vendor:req.params.vendor,id:req.params.id,stock:stock}:{error:"Unknown ID/Vendor"});
 });
 
