@@ -5,6 +5,7 @@
 const express = require("express");
 const bodyParser = require("body-parser");
 const app = express();
+const scraper = require("./stock-scraper.js")
 const fs = require("fs");
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(bodyParser.json());
@@ -16,7 +17,7 @@ app.use(bodyParser.json());
 app.use(express.static("public"));
 
 // init sqlite db
-const dbFile = "./.data/sqlite.db";
+const dbFile = "./.data/stockBase.db";
 const exists = fs.existsSync(dbFile);
 const sqlite3 = require("sqlite3").verbose();
 const db = new sqlite3.Database(dbFile);
@@ -25,23 +26,11 @@ const db = new sqlite3.Database(dbFile);
 db.serialize(() => {
   if (!exists) {
     db.run(
-      "CREATE TABLE Dreams (id INTEGER PRIMARY KEY AUTOINCREMENT, dream TEXT)"
+      "CREATE TABLE Stock (id INTEGER PRIMARY KEY AUTOINCREMENT, vendor TEXT, partNo TEXT, stock INTEGER)"
     );
-    console.log("New table Dreams created!");
-
-    // insert default dreams
-    db.serialize(() => {
-      db.run(
-        'INSERT INTO Dreams (dream) VALUES ("Find and count some sheep"), ("Climb a really tall mountain"), ("Wash the dishes")'
-      );
-    });
+    console.log("Stock table created");
   } else {
-    console.log('Database "Dreams" ready to go!');
-    db.each("SELECT * from Dreams", (err, row) => {
-      if (row) {
-        console.log(`record: ${row.dream}`);
-      }
-    });
+    console.log('Database "Stock" ready to go!');
   }
 });
 
@@ -51,10 +40,14 @@ app.get("/", (request, response) => {
 });
 
 // endpoint to get all the dreams in the database
-app.get("/getDreams", (request, response) => {
-  db.all("SELECT * from Dreams", (err, rows) => {
+app.get("/getAllRecords", (request, response) => {
+  db.all("SELECT * from Stock", (err, rows) => {
     response.send(JSON.stringify(rows));
   });
+});
+
+app.get("/getStock/:vendor/:id", (request, response) => {
+  
 });
 
 // endpoint to add a dream to the database
@@ -75,30 +68,6 @@ app.post("/addDream", (request, response) => {
   }
 });
 
-// endpoint to clear dreams from the database
-app.get("/clearDreams", (request, response) => {
-  // DISALLOW_WRITE is an ENV variable that gets reset for new projects so you can write to the database
-  if (!process.env.DISALLOW_WRITE) {
-    db.each(
-      "SELECT * from Dreams",
-      (err, row) => {
-        console.log("row", row);
-        db.run(`DELETE FROM Dreams WHERE ID=?`, row.id, error => {
-          if (row) {
-            console.log(`deleted row ${row.id}`);
-          }
-        });
-      },
-      err => {
-        if (err) {
-          response.send({ message: "error!" });
-        } else {
-          response.send({ message: "success" });
-        }
-      }
-    );
-  }
-});
 
 // helper function that prevents html/css/script malice
 const cleanseString = function(string) {
