@@ -52,9 +52,14 @@ async function getAlliedStock(productNumber) {
 
 async function getNewarkStock(productNumber) {
   try {
-    const webpage = await axios.get(`https://www.newark.com/ProductsInfo?inv=y&mainPartNum=${productNumber}`);
-    return parseInt(webpage.data.productList.main[0].inv.totalInStock.replace(",",""))
+    const webpage = await axios.get(
+      `https://www.newark.com/ProductsInfo?inv=y&mainPartNum=${productNumber}`
+    );
+    return parseInt(
+      webpage.data.productList.main[0].inv.totalInStock.replace(",", "")
+    );
   } catch (e) {
+    console.log(e);
     return null;
   }
 }
